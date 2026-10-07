@@ -12,10 +12,15 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Catalog")
-            ?? throw new InvalidOperationException(
+        var connectionString = configuration.GetConnectionString("Catalog");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
                 "Connection string 'Catalog' is not configured. " +
-                "In development set it with: dotnet user-secrets set \"ConnectionStrings:Catalog\" \"...\"");
+                "In development set it with: " +
+                "dotnet user-secrets set \"ConnectionStrings:Catalog\" \"<value>\"");
+        }
 
         services.AddDbContext<CatalogDbContext>(options =>
             options.UseSqlServer(connectionString));

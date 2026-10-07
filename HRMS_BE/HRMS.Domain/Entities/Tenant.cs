@@ -22,12 +22,12 @@ public sealed partial class Tenant : BaseEntity
 
     private Tenant(string name, string slug, string databaseName)
     {
-        Id = Guid.NewGuid();
+        Id = Guid.CreateVersion7();
         Name = name;
         Slug = slug;
         DatabaseName = databaseName;
         Status = TenantStatus.Active;
-        CreatedAtUtc = DateTime.Now;
+        CreatedAtUtc = DateTimeOffset.UtcNow;
     }
 
     public static Tenant Create(string name, string slug, string databaseName)
