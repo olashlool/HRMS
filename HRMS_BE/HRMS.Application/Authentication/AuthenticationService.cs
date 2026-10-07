@@ -3,6 +3,7 @@ using HRMS.Application.Common.Exceptions;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Domain.Common;
 using HRMS.Domain.Entities;
+using HRMS.Domain.Authorization;
 using HRMS.Domain.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,8 @@ public sealed class AuthenticationService : IAuthenticationService
     private readonly IAccessTokenGenerator _accessTokenGenerator;
     private readonly IRefreshTokenGenerator _refreshTokenGenerator;
     private readonly ITotpGenerator _totp;
+    private readonly IPermissionResolver _permissionResolver;
+    private readonly IRoleSeeder _roleSeeder;
     private readonly ISecretProtector _secretProtector;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<AuthenticationService> _logger;
@@ -32,6 +35,8 @@ public sealed class AuthenticationService : IAuthenticationService
         IAccessTokenGenerator accessTokenGenerator,
         IRefreshTokenGenerator refreshTokenGenerator,
         ITotpGenerator totp,
+        IPermissionResolver permissionResolver,
+        IRoleSeeder roleSeeder,
         ISecretProtector secretProtector,
         TimeProvider timeProvider,
         ILogger<AuthenticationService> logger)
@@ -41,6 +46,8 @@ public sealed class AuthenticationService : IAuthenticationService
         _accessTokenGenerator = accessTokenGenerator;
         _refreshTokenGenerator = refreshTokenGenerator;
         _totp = totp;
+        _permissionResolver = permissionResolver;
+        _roleSeeder = roleSeeder;
         _secretProtector = secretProtector;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -81,6 +88,25 @@ public sealed class AuthenticationService : IAuthenticationService
             passwordHash);
 
         _catalog.Users.Add(user);
+
+        var isFirstUserInTenant = !await _catalog.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.TenantId == tenant.Id, cancellationToken);
+
+        var adminRoleId = await _roleSeeder.EnsureTenantRolesAsync(tenant.Id, cancellationToken);
+
+        var roleId = isFirstUserInTenant
+            ? adminRoleId
+            : await _catalog.Roles
+                .Where(r => r.TenantId == tenant.Id && r.NormalizedName == SystemRoles.Employee.ToUpperInvariant())
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+        if (roleId != Guid.Empty)
+        {
+            _catalog.UserRoles.Add(UserRole.Assign(user.Id, roleId, _timeProvider.GetUtcNow()));
+        }
+
         await _catalog.SaveChangesAsync(cancellationToken);
 
         return await IssueTokensAsync(user, tenant, Guid.CreateVersion7(), ipAddress, cancellationToken);
@@ -355,7 +381,8 @@ public sealed class AuthenticationService : IAuthenticationService
     {
         var now = nowOverride ?? _timeProvider.GetUtcNow();
 
-        var accessToken = _accessTokenGenerator.Generate(user, tenant);
+        var permissions = await _permissionResolver.ResolveAsync(user.Id, cancellationToken);
+        var accessToken = _accessTokenGenerator.Generate(user, tenant, permissions);
 
         var refreshTokenValue = _refreshTokenGenerator.Generate();
 

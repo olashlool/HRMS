@@ -1,5 +1,6 @@
 using System.Text;
 using HRMS.API.Authentication;
+using HRMS.API.Authorization;
 using HRMS.API.ExceptionHandling;
 using HRMS.API.Middleware;
 using HRMS.Application;
@@ -7,6 +8,7 @@ using HRMS.Infrastructure;
 using HRMS.Application.Common.Interfaces;
 using HRMS.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +50,8 @@ builder.Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();

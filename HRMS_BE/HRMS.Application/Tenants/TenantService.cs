@@ -13,15 +13,18 @@ public sealed class TenantService : ITenantService
 
     private readonly ICatalogDbContext _catalog;
     private readonly ITenantProvisioner _provisioner;
+    private readonly IRoleSeeder _roleSeeder;
     private readonly ILogger<TenantService> _logger;
 
     public TenantService(
         ICatalogDbContext catalog,
         ITenantProvisioner provisioner,
+        IRoleSeeder roleSeeder,
         ILogger<TenantService> logger)
     {
         _catalog = catalog;
         _provisioner = provisioner;
+        _roleSeeder = roleSeeder;
         _logger = logger;
     }
 
@@ -89,6 +92,7 @@ public sealed class TenantService : ITenantService
         try
         {
             await _provisioner.ProvisionAsync(tenant.DatabaseName, cancellationToken);
+            await _roleSeeder.EnsureTenantRolesAsync(tenant.Id, cancellationToken);
             tenant.MarkProvisioned();
         }
         catch (Exception ex)

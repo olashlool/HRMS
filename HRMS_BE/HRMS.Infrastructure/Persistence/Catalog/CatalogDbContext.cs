@@ -24,6 +24,14 @@ public sealed class CatalogDbContext : SqlServerDbContext, ICatalogDbContext
 
     public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
 
+    public DbSet<Role> Roles => Set<Role>();
+
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+
+    public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

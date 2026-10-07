@@ -1,6 +1,8 @@
+using HRMS.API.Authorization;
 using HRMS.API.Filters;
 using HRMS.Application.Employees;
 using HRMS.Application.Employees.Dtos;
+using HRMS.Domain.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
@@ -18,6 +20,7 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpPost]
+    [HasPermission(Permissions.Employees.Create)]
     [ProducesResponseType<EmployeeResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -31,6 +34,7 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [HasPermission(Permissions.Employees.Read)]
     [ProducesResponseType<EmployeeResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<EmployeeResponse>> GetById(
@@ -41,6 +45,7 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [HasPermission(Permissions.Employees.Delete)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
@@ -51,6 +56,7 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpGet]
+    [HasPermission(Permissions.Employees.Read)]
     [ProducesResponseType<IReadOnlyList<EmployeeResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<EmployeeResponse>>> List(
         CancellationToken cancellationToken)

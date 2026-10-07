@@ -1,6 +1,8 @@
+using HRMS.API.Authorization;
 using HRMS.API.Filters;
 using HRMS.Application.Tenants;
 using HRMS.Application.Tenants.Dtos;
+using HRMS.Domain.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;

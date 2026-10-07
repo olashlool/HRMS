@@ -13,6 +13,7 @@ public sealed class AccessTokenGenerator : IAccessTokenGenerator
     public const string TenantIdClaim = "tenant_id";
     public const string TenantSlugClaim = "tenant_slug";
     public const string SecurityStampClaim = "security_stamp";
+    public const string PermissionClaim = "permission";
 
     private readonly JwtOptions _options;
     private readonly TimeProvider _timeProvider;
@@ -27,7 +28,7 @@ public sealed class AccessTokenGenerator : IAccessTokenGenerator
         _signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
     }
 
-    public AccessToken Generate(User user, Tenant tenant)
+    public AccessToken Generate(User user, Tenant tenant, IReadOnlySet<string> permissions)
     {
         var now = _timeProvider.GetUtcNow();
         var expiresAt = now.AddMinutes(_options.AccessTokenMinutes);
@@ -42,6 +43,8 @@ public sealed class AccessTokenGenerator : IAccessTokenGenerator
             new(TenantSlugClaim, tenant.Slug),
             new(SecurityStampClaim, user.SecurityStamp)
         };
+
+        claims.AddRange(permissions.Select(p => new Claim(PermissionClaim, p)));
 
         var descriptor = new SecurityTokenDescriptor
         {

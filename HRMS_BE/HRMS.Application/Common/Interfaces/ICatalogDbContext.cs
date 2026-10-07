@@ -17,5 +17,13 @@ public interface ICatalogDbContext
 
     DbSet<LoginAttempt> LoginAttempts { get; }
 
+    DbSet<Role> Roles { get; }
+
+    DbSet<RolePermission> RolePermissions { get; }
+
+    DbSet<UserRole> UserRoles { get; }
+
+    DbSet<UserPermission> UserPermissions { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

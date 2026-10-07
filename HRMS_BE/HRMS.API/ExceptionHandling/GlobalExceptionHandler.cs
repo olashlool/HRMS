@@ -27,6 +27,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         {
             InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Authentication failed"),
             InvalidTokenException => (StatusCodes.Status400BadRequest, "Invalid token"),
+            ForbiddenException => (StatusCodes.Status403Forbidden, "Forbidden"),
             NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
             ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
             DomainException => (StatusCodes.Status400BadRequest, "Invalid request"),
