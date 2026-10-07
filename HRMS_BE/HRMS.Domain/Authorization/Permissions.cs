@@ -22,6 +22,22 @@ public static class Permissions
         public const string Manage = "roles.manage";
     }
 
+    public static class Leave
+    {
+        public const string Read = "leave.read";
+        public const string Request = "leave.request";
+        public const string ApproveTeam = "leave.approve-team";
+        public const string ApproveAny = "leave.approve-any";
+        public const string Manage = "leave.manage";
+    }
+
+    public static class Attendance
+    {
+        public const string Read = "attendance.read";
+        public const string Record = "attendance.record";
+        public const string ManageAny = "attendance.manage-any";
+    }
+
     public static class Payroll
     {
         public const string Read = "payroll.read";
@@ -44,7 +60,15 @@ public static class Permissions
         Roles.Read,
         Roles.Manage,
         Payroll.Read,
-        Payroll.Manage
+        Payroll.Manage,
+        Leave.Read,
+        Leave.Request,
+        Leave.ApproveTeam,
+        Leave.ApproveAny,
+        Leave.Manage,
+        Attendance.Read,
+        Attendance.Record,
+        Attendance.ManageAny
     };
 
     public static readonly IReadOnlySet<string> SystemScoped = new HashSet<string>(StringComparer.Ordinal)
@@ -67,6 +91,13 @@ public static class SystemRoles
         new Dictionary<string, IReadOnlySet<string>>(StringComparer.Ordinal)
         {
             [TenantAdmin] = Permissions.TenantScoped,
-            [Employee] = new HashSet<string>(StringComparer.Ordinal) { Permissions.Employees.Read }
+            [Employee] = new HashSet<string>(StringComparer.Ordinal)
+            {
+                Permissions.Employees.Read,
+                Permissions.Leave.Read,
+                Permissions.Leave.Request,
+                Permissions.Attendance.Read,
+                Permissions.Attendance.Record
+            }
         };
 }

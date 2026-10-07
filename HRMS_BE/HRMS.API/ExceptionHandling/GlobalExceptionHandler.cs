@@ -28,6 +28,8 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Authentication failed"),
             InvalidTokenException => (StatusCodes.Status400BadRequest, "Invalid token"),
             ForbiddenException => (StatusCodes.Status403Forbidden, "Forbidden"),
+            SubscriptionRequiredException => (StatusCodes.Status402PaymentRequired, "Subscription required"),
+            PlanLimitExceededException => (StatusCodes.Status402PaymentRequired, "Plan limit exceeded"),
             NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
             ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
             DomainException => (StatusCodes.Status400BadRequest, "Invalid request"),

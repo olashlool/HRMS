@@ -17,6 +17,7 @@ public sealed partial class Employee : AuditableEntity
     public DateOnly HireDate { get; private set; }
     public EmploymentType EmploymentType { get; private set; }
     public Guid? UserId { get; private set; }
+    public Guid? ManagerId { get; private set; }
     private Employee()
     {
     }
@@ -67,6 +68,16 @@ public sealed partial class Employee : AuditableEntity
         }
 
         return new Employee(employeeNumber, firstName, lastName, workEmail, hireDate, employmentType);
+    }
+
+    public void AssignManager(Guid? managerId)
+    {
+        if (managerId == Id)
+        {
+            throw new DomainException("An employee cannot manage themselves.");
+        }
+
+        ManagerId = managerId;
     }
 
     public void LinkToUser(Guid userId)

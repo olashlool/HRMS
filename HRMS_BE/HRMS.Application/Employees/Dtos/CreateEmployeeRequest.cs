@@ -9,3 +9,7 @@ public sealed record CreateEmployeeRequest(
     string WorkEmail,
     DateOnly HireDate,
     EmploymentType EmploymentType);
+
+public sealed record LinkUserRequest(Guid UserId);
+
+public sealed record AssignManagerRequest(Guid? ManagerId);

@@ -9,16 +9,25 @@ namespace HRMS.Application.Employees;
 public sealed class EmployeeService : IEmployeeService
 {
     private readonly ITenantDbContext _tenantDb;
+    private readonly ICurrentTenant _currentTenant;
+    private readonly IEntitlementResolver _entitlements;
 
-    public EmployeeService(ITenantDbContext tenantDb)
+    public EmployeeService(
+        ITenantDbContext tenantDb,
+        ICurrentTenant currentTenant,
+        IEntitlementResolver entitlements)
     {
         _tenantDb = tenantDb;
+        _currentTenant = currentTenant;
+        _entitlements = entitlements;
     }
 
     public async Task<EmployeeResponse> CreateAsync(
         CreateEmployeeRequest request,
         CancellationToken cancellationToken = default)
     {
+        await GuardSeatLimitAsync(cancellationToken);
+
         var employee = Employee.Create(
             request.EmployeeNumber,
             request.FirstName,
@@ -64,6 +73,7 @@ public sealed class EmployeeService : IEmployeeService
                 e.HireDate,
                 e.EmploymentType.ToString(),
                 e.UserId,
+                e.ManagerId,
                 e.CreatedAtUtc))
             .ToListAsync(cancellationToken);
     }
@@ -82,6 +92,56 @@ public sealed class EmployeeService : IEmployeeService
         await _tenantDb.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<EmployeeResponse> LinkUserAsync(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var employee = await RequireAsync(id, cancellationToken);
+
+        employee.LinkToUser(userId);
+        await _tenantDb.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(employee);
+    }
+
+    public async Task<EmployeeResponse> AssignManagerAsync(Guid id, Guid? managerId, CancellationToken cancellationToken = default)
+    {
+        var employee = await RequireAsync(id, cancellationToken);
+
+        if (managerId is { } manager && !await _tenantDb.Employees.AnyAsync(e => e.Id == manager, cancellationToken))
+        {
+            throw new NotFoundException(nameof(Employee), manager);
+        }
+
+        employee.AssignManager(managerId);
+        await _tenantDb.SaveChangesAsync(cancellationToken);
+
+        return ToResponse(employee);
+    }
+
+    private async Task<Employee> RequireAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var employee = await _tenantDb.Employees.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+
+        return employee ?? throw new NotFoundException(nameof(Employee), id);
+    }
+
+    private async Task GuardSeatLimitAsync(CancellationToken cancellationToken)
+    {
+        var entitlements = await _entitlements.ResolveAsync(_currentTenant.TenantId, cancellationToken);
+
+        if (entitlements.MaxEmployees is not { } limit)
+        {
+            return;
+        }
+
+        var used = await _tenantDb.Employees.CountAsync(cancellationToken);
+
+        if (used >= limit)
+        {
+            throw new PlanLimitExceededException(
+                $"The {entitlements.PlanName} plan allows {limit} employees and {used} are already in use.");
+        }
+    }
+
     private static EmployeeResponse ToResponse(Employee employee) =>
         new(employee.Id,
             employee.EmployeeNumber,
@@ -91,5 +151,6 @@ public sealed class EmployeeService : IEmployeeService
             employee.HireDate,
             employee.EmploymentType.ToString(),
             employee.UserId,
+            employee.ManagerId,
             employee.CreatedAtUtc);
 }

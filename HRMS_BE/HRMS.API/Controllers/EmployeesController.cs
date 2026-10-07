@@ -10,6 +10,7 @@ namespace HRMS.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [TenantRequired]
+[ActiveSubscriptionRequired]
 public sealed class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
@@ -42,6 +43,20 @@ public sealed class EmployeesController : ControllerBase
         CancellationToken cancellationToken)
     {
         return await _employeeService.GetByIdAsync(id, cancellationToken);
+    }
+
+    [HttpPut("{id:guid}/user")]
+    [HasPermission(Permissions.Employees.Update)]
+    public async Task<ActionResult<EmployeeResponse>> LinkUser(Guid id, [FromBody] LinkUserRequest request, CancellationToken cancellationToken)
+    {
+        return await _employeeService.LinkUserAsync(id, request.UserId, cancellationToken);
+    }
+
+    [HttpPut("{id:guid}/manager")]
+    [HasPermission(Permissions.Employees.Update)]
+    public async Task<ActionResult<EmployeeResponse>> AssignManager(Guid id, [FromBody] AssignManagerRequest request, CancellationToken cancellationToken)
+    {
+        return await _employeeService.AssignManagerAsync(id, request.ManagerId, cancellationToken);
     }
 
     [HttpDelete("{id:guid}")]

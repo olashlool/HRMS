@@ -14,6 +14,14 @@ public sealed class TenantDbContext : SqlServerDbContext, ITenantDbContext
 
     public DbSet<Employee> Employees => Set<Employee>();
 
+    public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+
+    public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
+
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

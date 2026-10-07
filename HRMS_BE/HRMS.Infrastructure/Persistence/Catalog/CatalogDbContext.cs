@@ -32,6 +32,14 @@ public sealed class CatalogDbContext : SqlServerDbContext, ICatalogDbContext
 
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
 
+    public DbSet<Plan> Plans => Set<Plan>();
+
+    public DbSet<PlanFeature> PlanFeatures => Set<PlanFeature>();
+
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

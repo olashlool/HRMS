@@ -9,4 +9,5 @@ public sealed record EmployeeResponse(
     DateOnly HireDate,
     string EmploymentType,
     Guid? UserId,
+    Guid? ManagerId,
     DateTimeOffset CreatedAtUtc);

@@ -25,5 +25,13 @@ public interface ICatalogDbContext
 
     DbSet<UserPermission> UserPermissions { get; }
 
+    DbSet<Plan> Plans { get; }
+
+    DbSet<PlanFeature> PlanFeatures { get; }
+
+    DbSet<Subscription> Subscriptions { get; }
+
+    DbSet<Invoice> Invoices { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -14,6 +14,14 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+const string DevCorsPolicy = "dev-spa";
+
+builder.Services.AddCors(options =>
+    options.AddPolicy(DevCorsPolicy, policy => policy
+        .WithOrigins("http://localhost:4200", "http://localhost:4300")
+        .AllowAnyHeader()
+        .AllowAnyMethod()));
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddOpenApi();
 
@@ -61,6 +69,11 @@ app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(DevCorsPolicy);
 }
 
 app.UseHttpsRedirection();
