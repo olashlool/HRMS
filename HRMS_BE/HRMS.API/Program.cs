@@ -1,4 +1,5 @@
 using HRMS.API.ExceptionHandling;
+using HRMS.API.Middleware;
 using HRMS.Application;
 using HRMS.Infrastructure;
 
@@ -24,6 +25,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.MapControllers();
 

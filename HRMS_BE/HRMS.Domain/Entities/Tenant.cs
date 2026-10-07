@@ -4,7 +4,7 @@ using HRMS.Domain.Entities.Enums;
 
 namespace HRMS.Domain.Entities;
 
-public sealed partial class Tenant : BaseEntity
+public sealed partial class Tenant : AuditableEntity
 {
     public const int NameMaxLength = 200;
     public const int SlugMaxLength = 63;
@@ -14,8 +14,6 @@ public sealed partial class Tenant : BaseEntity
     public string Slug { get; private set; } = null!;
     public string DatabaseName { get; private set; } = null!;
     public TenantStatus Status { get; private set; }
-    public DateTimeOffset CreatedAtUtc { get; private set; }
-
     private Tenant()
     {
     }
@@ -26,8 +24,7 @@ public sealed partial class Tenant : BaseEntity
         Name = name;
         Slug = slug;
         DatabaseName = databaseName;
-        Status = TenantStatus.Active;
-        CreatedAtUtc = DateTimeOffset.UtcNow;
+        Status = TenantStatus.Provisioning;
     }
 
     public static Tenant Create(string name, string slug, string databaseName)
@@ -76,6 +73,28 @@ public sealed partial class Tenant : BaseEntity
             throw new DomainException($"Tenant name must not exceed {NameMaxLength} characters.");
 
         Name = name;
+    }
+
+    public void MarkProvisioned()
+    {
+        if (Status is not (TenantStatus.Provisioning or TenantStatus.ProvisioningFailed))
+        {
+            throw new DomainException(
+                $"A tenant in status {Status} cannot be marked as provisioned.");
+        }
+
+        Status = TenantStatus.Active;
+    }
+
+    public void MarkProvisioningFailed()
+    {
+        if (Status != TenantStatus.Provisioning)
+        {
+            throw new DomainException(
+                $"A tenant in status {Status} cannot be marked as failed provisioning.");
+        }
+
+        Status = TenantStatus.ProvisioningFailed;
     }
 
     public void Suspend() => Status = TenantStatus.Suspended;

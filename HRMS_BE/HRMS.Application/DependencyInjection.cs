@@ -1,3 +1,4 @@
+using HRMS.Application.Employees;
 using HRMS.Application.Tenants;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +9,8 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<ITenantLookup, TenantLookup>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
 
         return services;
     }

@@ -1,5 +1,8 @@
 using HRMS.Application.Common.Interfaces;
 using HRMS.Infrastructure.Persistence;
+using HRMS.Infrastructure.Persistence.Catalog;
+using HRMS.Infrastructure.Persistence.Tenants;
+using HRMS.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,10 +25,35 @@ public static class DependencyInjection
                 "dotnet user-secrets set \"ConnectionStrings:Catalog\" \"<value>\"");
         }
 
-        services.AddDbContext<CatalogDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<ICurrentUser, AnonymousCurrentUser>();
+        services.AddScoped<AuditingInterceptor>();
+
+        services.AddDbContext<CatalogDbContext>((serviceProvider, options) =>
+            options
+                .UseSqlServer(connectionString)
+                .AddInterceptors(serviceProvider.GetRequiredService<AuditingInterceptor>()));
 
         services.AddScoped<ICatalogDbContext>(sp => sp.GetRequiredService<CatalogDbContext>());
+
+        services.AddScoped<CurrentTenant>();
+        services.AddScoped<ICurrentTenant>(sp => sp.GetRequiredService<CurrentTenant>());
+        services.AddScoped<ICurrentTenantSetter>(sp => sp.GetRequiredService<CurrentTenant>());
+
+        services.AddSingleton<TenantConnectionStringFactory>();
+        services.AddScoped<ITenantProvisioner, TenantProvisioner>();
+
+        services.AddDbContext<TenantDbContext>((serviceProvider, options) =>
+        {
+            var currentTenant = serviceProvider.GetRequiredService<ICurrentTenant>();
+            var connectionStringFactory = serviceProvider.GetRequiredService<TenantConnectionStringFactory>();
+
+            options
+                .UseSqlServer(connectionStringFactory.Create(currentTenant.DatabaseName))
+                .AddInterceptors(serviceProvider.GetRequiredService<AuditingInterceptor>());
+        });
+
+        services.AddScoped<ITenantDbContext>(sp => sp.GetRequiredService<TenantDbContext>());
 
         return services;
     }

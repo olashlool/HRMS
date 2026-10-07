@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRMS.Infrastructure.Persistence.Catalog.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20261007071810_InitialCatalog")]
-    partial class InitialCatalog
+    [Migration("20261007092528_AddAuditingAndSoftDelete")]
+    partial class AddAuditingAndSoftDelete
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,8 +33,29 @@ namespace HRMS.Infrastructure.Persistence.Catalog.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
                     b.Property<string>("DatabaseName")
                         .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTimeOffset?>("DeletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ModifiedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ModifiedBy")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
@@ -57,11 +78,13 @@ namespace HRMS.Infrastructure.Persistence.Catalog.Migrations
 
                     b.HasIndex("DatabaseName")
                         .IsUnique()
-                        .HasDatabaseName("UX_Tenants_DatabaseName");
+                        .HasDatabaseName("UX_Tenants_DatabaseName")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("Slug")
                         .IsUnique()
-                        .HasDatabaseName("UX_Tenants_Slug");
+                        .HasDatabaseName("UX_Tenants_Slug")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Tenants", (string)null);
                 });

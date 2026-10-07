@@ -28,6 +28,16 @@ public sealed class TenantsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = tenant.Id }, tenant);
     }
 
+    [HttpPost("{id:guid}/provision")]
+    [ProducesResponseType<TenantResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<TenantResponse>> RetryProvisioning(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        return await _tenantService.RetryProvisioningAsync(id, cancellationToken);
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<TenantResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

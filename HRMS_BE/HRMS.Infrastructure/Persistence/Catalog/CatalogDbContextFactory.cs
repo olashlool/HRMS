@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace HRMS.Infrastructure.Persistence;
+namespace HRMS.Infrastructure.Persistence.Catalog;
 
 public sealed class CatalogDbContextFactory : IDesignTimeDbContextFactory<CatalogDbContext>
 {
