@@ -1,4 +1,5 @@
 using HRMS.Application.Common.Interfaces;
+using HRMS.Infrastructure.Authentication;
 using HRMS.Infrastructure.Persistence;
 using HRMS.Infrastructure.Persistence.Catalog;
 using HRMS.Infrastructure.Persistence.Tenants;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         }
 
         services.AddSingleton(TimeProvider.System);
+
         services.AddScoped<ICurrentUser, AnonymousCurrentUser>();
         services.AddScoped<AuditingInterceptor>();
 
@@ -54,6 +56,23 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ITenantDbContext>(sp => sp.GetRequiredService<TenantDbContext>());
+
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer), "Jwt:Issuer is required.")
+            .Validate(o => !string.IsNullOrWhiteSpace(o.Audience), "Jwt:Audience is required.")
+            .Validate(o => !string.IsNullOrWhiteSpace(o.SigningKey), "Jwt:SigningKey is required.")
+            .Validate(o => o.SigningKey.Length >= 32, "Jwt:SigningKey must be at least 32 characters.")
+            .Validate(o => o.AccessTokenMinutes is > 0 and <= 60, "Jwt:AccessTokenMinutes must be between 1 and 60.")
+            .ValidateOnStart();
+
+        services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+        services.AddSingleton<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddSingleton<IAccessTokenGenerator, AccessTokenGenerator>();
+        services.AddSingleton<ITotpGenerator, TotpGenerator>();
+        services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
+        services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddDataProtection();
 
         return services;
     }

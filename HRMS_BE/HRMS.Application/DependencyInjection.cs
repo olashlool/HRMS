@@ -1,3 +1,4 @@
+using HRMS.Application.Authentication;
 using HRMS.Application.Employees;
 using HRMS.Application.Tenants;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,8 @@ public static class DependencyInjection
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<ITenantLookup, TenantLookup>();
         services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IAccountService, AccountService>();
 
         return services;
     }

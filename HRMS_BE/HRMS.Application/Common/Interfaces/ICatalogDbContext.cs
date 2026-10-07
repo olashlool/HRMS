@@ -7,5 +7,15 @@ public interface ICatalogDbContext
 {
     DbSet<Tenant> Tenants { get; }
 
+    DbSet<User> Users { get; }
+
+    DbSet<RefreshToken> RefreshTokens { get; }
+
+    DbSet<UserToken> UserTokens { get; }
+
+    DbSet<RecoveryCode> RecoveryCodes { get; }
+
+    DbSet<LoginAttempt> LoginAttempts { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

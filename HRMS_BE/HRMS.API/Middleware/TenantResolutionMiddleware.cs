@@ -1,5 +1,6 @@
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Tenants;
+using HRMS.Infrastructure.Authentication;
 
 namespace HRMS.API.Middleware;
 
@@ -22,29 +23,38 @@ public sealed class TenantResolutionMiddleware
         ITenantLookup tenantLookup,
         ICurrentTenantSetter currentTenantSetter)
     {
-        if (!environment.IsDevelopment())
-        {
-            await _next(context);
-            return;
-        }
+        var slug = ResolveSlug(context, environment);
 
-        if (!context.Request.Headers.TryGetValue(DevelopmentTenantHeader, out var header))
+        if (slug is not null)
         {
-            await _next(context);
-            return;
-        }
+            var tenant = await tenantLookup.FindActiveBySlugAsync(slug, context.RequestAborted);
 
-        var tenant = await tenantLookup.FindActiveBySlugAsync(header.ToString(), context.RequestAborted);
-
-        if (tenant is null)
-        {
-            _logger.LogWarning("No active tenant matches the development header value '{Slug}'.", header.ToString());
-        }
-        else
-        {
-            currentTenantSetter.Set(tenant.Id, tenant.Slug, tenant.DatabaseName);
+            if (tenant is null)
+            {
+                _logger.LogWarning("No active tenant matches the slug '{Slug}'.", slug);
+            }
+            else
+            {
+                currentTenantSetter.Set(tenant.Id, tenant.Slug, tenant.DatabaseName);
+            }
         }
 
         await _next(context);
+    }
+
+    private static string? ResolveSlug(HttpContext context, IWebHostEnvironment environment)
+    {
+        if (context.User.Identity?.IsAuthenticated == true)
+        {
+            return context.User.FindFirst(AccessTokenGenerator.TenantSlugClaim)?.Value;
+        }
+
+        if (environment.IsDevelopment()
+            && context.Request.Headers.TryGetValue(DevelopmentTenantHeader, out var header))
+        {
+            return header.ToString();
+        }
+
+        return null;
     }
 }
